@@ -1,4 +1,5 @@
 (ns computer-permutations.core
+  (:require [clojure.math.combinatorics :as combo])
   (:gen-class))
 
 (def motherboards
@@ -115,9 +116,9 @@
 
 (defn- calculate-additional-cost [game capture media]
   (let [l (list game capture media)]
-    (-
-      (apply + (map calculate-the-additional-cost l))
-      100)))
+    ; I already own one license so subtract that cost.
+    (- (apply + (map calculate-the-additional-cost l))
+       100)))
 
 (defn- total-cost-comparator [el1 el2]
   (< (:total-additional-cost el1) (:total-additional-cost el2)))
