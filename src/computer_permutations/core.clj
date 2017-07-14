@@ -97,13 +97,19 @@
     (and (= "Phanteks P400S" case-name)
          (= no-optane-card-name optane-card-name))))
 
+(defn- valid-media-pc-even-if-has-optane? [[_ _ {{:keys [name]} :case}]]
+  (= "Phanteks P400S" name))
+
 (defn- are-two-mbs-owned? [l]
   (let [owned-l (map (fn [{{:keys [owned?]} :mb}] owned?) l)]
     (= 2 (count (filter true? owned-l)))))
 
-(defn- at-most-one-optane-card? [l]
+(defn- count-of-number-of-optane-cards-used [l]
   (let [optane-l (map (fn [{{:keys [name]} :optane-card}] name) l)]
-    (> 2 (count (filter #(= % "32 GB optane") optane-l)))))
+    (count (filter #(= % "32 GB optane") optane-l))))
+
+(defn- at-most-one-optane-card? [l]
+  (> 2 (count-of-number-of-optane-cards-used l)))
 
 (defn- already-licensed? [c]
   (if-let [licensed-to (:licensed-to (:cpu c))]
@@ -112,14 +118,16 @@
 
 (defn- calculate-the-additional-cost [c]
   (+ (reduce-kv (fn [m _ {:keys [additional-cost]}] (+ m additional-cost)) 0 c)
+     ; add cost of a Windows license
      (if (already-licensed? c)
        0
        100)))
 
-(defn- calculate-additional-cost [game capture media]
-  (let [l (list game capture media)]
+(defn- calculate-additional-cost [l]
+  (let [; if not using the paid-for optane card, add in its cost
+        optane-cost (if (= 0 (count-of-number-of-optane-cards-used l)) 80 0)]
     ; I already own one license so subtract that cost.
-    (- (apply + (map calculate-the-additional-cost l))
+    (- (apply + (cons optane-cost (map calculate-the-additional-cost l)))
        100)))
 
 (defn- no-thunderbolt-card-in-pc? [{{:keys [name]} :thunderbolt-card}]
@@ -134,8 +142,8 @@
        (is-thunderbolt-pc? capture)
        (no-thunderbolt-card-in-pc? media)))
 
-(defn- create-pcs-map [[game capture media]]
-  {:game game :capture capture :media media :total-additional-cost (calculate-additional-cost game capture media)})
+(defn- create-pcs-map [[game capture media :as l]]
+  {:game game :capture capture :media media :total-additional-cost (calculate-additional-cost l)})
 
 (defn- create-all-pc-permutations [l]
   (->>
@@ -144,7 +152,7 @@
     (filter all-different-mbs?)
     (filter all-different-cases?)
     (filter valid-game-pc?)
-    (filter valid-media-pc?)
+    (filter valid-media-pc-even-if-has-optane?)
     (filter are-two-mbs-owned?)
     (filter at-most-one-optane-card?)
     (map create-pcs-map)))
