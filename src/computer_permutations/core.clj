@@ -91,16 +91,15 @@
          (or (= "ASRock Z270 Supercarrier" mb-name)
              (= "Asus Z170 WS" mb-name)))))
 
-(defn- valid-media-pc? [media]
-  (let [name (:name (:case media))]
-    (= "Phanteks P400S" name)))
+(defn- valid-media-pc? [{{:keys [name]} :case}]
+  (= "Phanteks P400S" name))
 
 (defn- are-two-mbs-owned? [c1 c2 c3]
-  (let [l (list (:owned? (:mb c1)) (:owned? (:mb c2)) (:owned? (:mb c3)))]
-    (= 2 (count (filter identity l)))))
+  (let [l (map (fn [{{:keys [owned?]} :mb}] owned?) (list c1 c2 c3))]
+    (= 2 (count (filter true? l)))))
 
 (defn- only-one-optane-card? [c1 c2 c3]
-  (let [l (list (:name (:optane-card c1)) (:name (:optane-card c2)) (:name (:optane-card c3)))]
+  (let [l (map (fn [{{:keys [name]} :optane-card}] name) (list c1 c2 c3))]
     (= 1 (count (filter #(= % "32 GB optane") l)))))
 
 (defn- already-licensed? [c]
