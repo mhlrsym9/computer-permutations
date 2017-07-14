@@ -147,7 +147,7 @@
                             {:keys [only-thunderbolt-card thunderbolt-on-board?]} :mb}]
   (or thunderbolt-on-board? (= name only-thunderbolt-card)))
 
-(defn- create-pc-permutations [game-pcs capture-pcs media-pcs]
+(defn- create-pc-permutations [[game-pcs capture-pcs media-pcs]]
   (for [game (filter is-thunderbolt-pc? game-pcs)
         capture (filter is-thunderbolt-pc? capture-pcs)
         media (filter no-thunderbolt-card-in-pc? media-pcs)
@@ -159,11 +159,8 @@
                    (only-one-optane-card? game capture media))]
     {:game game :capture capture :media media :total-additional-cost (calculate-additional-cost game capture media)}))
 
-(defn- create-all-pc-permutations [cpus1 cpus2 cpus3]
-  (concat (create-pc-permutations cpus1 cpus2 cpus3)
-          (create-pc-permutations cpus2 cpus3 cpus1)
-          (create-pc-permutations cpus3 cpus1 cpus2)
-          (create-pc-permutations cpus1 cpus3 cpus2)))
+(defn- create-all-pc-permutations [[cpus1 cpus2 cpus3]]
+  (mapcat create-pc-permutations (combo/permutations (list cpus1 cpus2 cpus3))))
 
 (defn -main
   "I don't do a whole lot ... yet."
@@ -175,7 +172,7 @@
                                                     (cpu-check? mb %)
                                                     (optical-drive-check? mb case optical-drive))]
                                      {:mb mb :case case :cpu % :thunderbolt-card thunderbolt-card :optane-card optane-card :optical-drive optical-drive}) cpus)
-        permutations-of-three-computers (apply create-all-pc-permutations permutations-per-cpu)
+        permutations-of-three-computers (create-all-pc-permutations permutations-per-cpu)
         names-of-permutations (map (fn [{:keys [game capture media total-additional-cost]}]
                                      (clojure.string/join " " (list (str "Cost: " total-additional-cost "\n")
                                                                     (produce-description "Game" game)
