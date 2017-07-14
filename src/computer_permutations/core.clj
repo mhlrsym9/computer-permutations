@@ -108,12 +108,7 @@
     false))
 
 (defn- calculate-the-additional-cost [c]
-  (+ (:additional-cost (:mb c))
-     (:additional-cost (:case c))
-     (:additional-cost (:cpu c))
-     (:additional-cost (:thunderbolt-card c))
-     (:additional-cost (:optane-card c))
-     (:additional-cost (:optical-drive c))
+  (+ (reduce-kv (fn [m _ {:keys [additional-cost]}] (+ m additional-cost)) 0 c)
      (if (already-licensed? c)
        0
        100)))
