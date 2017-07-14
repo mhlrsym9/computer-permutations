@@ -7,20 +7,21 @@
         {:name "Asus Z170 WS" :size "ATX" :optane? false :owned? true :thunderbolt-on-board? false :only-thunderbolt-card "Asus Thunderbolt3" :additional-cost 0}
         {:name "ASRock Z270 Supercarrier" :size "ATX" :optane? true :owned? false :thunderbolt-on-board? true :only-cpu "i7-7700K" :only-case "Phanteks Pro" :additional-cost 349.99}
         {:name "ASRock Z270 ITX/AC" :size "mITX" :optane? true :owned? false :thunderbolt-on-board? true :additional-cost 138.99}
-        {:name "Gigabyte GA-Z170X-Gaming 7" :size "ATX" :optane? false :owned? false :thunderbolt-on-board? true :additional-cost (- (* 119.99 1.0625) 20.)}
+        {:name "Gigabyte GA-Z170X-Gaming 7" :size "ATX" :optane? false :owned? false :thunderbolt-on-board? true :additional-cost (- (* 119.99 1.0625) 20.) :from "MicroCenter"}
         {:name "Gigabyte GA-Z270-UD5" :size "ATX" :optane? true :owned? false :thunderbolt-on-board? true :additional-cost (* 199.99 1.0625)}
         {:name "ASRock H170 Pro4S" :size "ATX" :optane? false :owned? false :thunderbolt-on-board? false :additional-cost 69.99}
         {:name "Gigabyte GA-H110M-M.2" :size "mATX" :optane? false :owned? false :thunderbolt-on-board? false :additional-cost 46.99}
         {:name "Gigabyte GA-B250-HD3" :size "ATX" :optane? true :owned? false :thunderbolt-on-board? false :additional-cost 59.99}
-        {:name "ASRock H270M Pro4" :size "mATX" :optane? true :owned? false :thunderbolt-on-board? false :additional-cost 64.99}))
+        ;        {:name "ASRock H270M Pro4" :size "mATX" :optane? true :owned? false :thunderbolt-on-board? false :additional-cost 64.99 :from "NewEgg"}
+        {:name "ASRock H270M Pro4" :size "mATX" :optane? true :owned? false :thunderbolt-on-board? false :additional-cost 63.74 :from "MicroCenter"}))
 
 (def cases
   (list {:name "Phanteks Pro" :size "ATX" :additional-cost 0}
         {:name "Cooler Master Silencio 352" :size "mATX" :additional-cost 0}
         {:name "Phanteks P400S" :size "ATX" :additional-cost 0}
         {:name "be quiet PURE BASE 600 - Black" :size "ATX" :additional-cost 89.90}
-        ;        {:name "Corsair Carbide Series 300R" :size "ATX" :additional-cost (- (* 72.99 1.0625) 10.)}
-        {:name "Corsair Carbide Series 300R" :size "ATX" :additional-cost 59.99}
+        ;        {:name "Corsair Carbide Series 300R" :size "ATX" :additional-cost (- (* 72.99 1.0625) 10.) :from "MicroCenter"}
+        {:name "Corsair Carbide Series 300R" :size "ATX" :additional-cost 59.99 :from "NewEgg"}
         {:name "Phanteks Enthoo Pro Titanium Green" :size "ATX" :additional-cost 69.99}))
 
 (def cpus
@@ -69,7 +70,8 @@
     true))
 
 (defn- optical-drive-check? [mb case optical-drive]
-  (if (and (= "ASRock Z270M Extreme4" (:name mb)) (= "Cooler Master Silencio 352" (:name case)))
+  (if (and (= "ASRock Z270M Extreme4" (:name mb))
+           (= "Cooler Master Silencio 352" (:name case)))
     (= "short blu-ray" (:name optical-drive))
     (= "long blu-ray" (:name optical-drive))))
 
@@ -99,9 +101,9 @@
   (let [owned-l (map (fn [{{:keys [owned?]} :mb}] owned?) l)]
     (= 2 (count (filter true? owned-l)))))
 
-(defn- only-one-optane-card? [l]
+(defn- at-most-one-optane-card? [l]
   (let [optane-l (map (fn [{{:keys [name]} :optane-card}] name) l)]
-    (= 1 (count (filter #(= % "32 GB optane") optane-l)))))
+    (> 2 (count (filter #(= % "32 GB optane") optane-l)))))
 
 (defn- already-licensed? [c]
   (if-let [licensed-to (:licensed-to (:cpu c))]
@@ -119,26 +121,6 @@
     ; I already own one license so subtract that cost.
     (- (apply + (map calculate-the-additional-cost l))
        100)))
-
-(defn- total-cost-comparator [el1 el2]
-  (< (:total-additional-cost el1) (:total-additional-cost el2)))
-
-(defn- produce-description [desc c]
-  (str "\t"
-       desc
-       ": "
-       (:name (:mb c))
-       " in "
-       (:name (:case c))
-       " with "
-       (:name (:optical-drive c))
-       " and "
-       (:name (:cpu c))
-       " and "
-       (:name (:thunderbolt-card c))
-       " and "
-       (:name (:optane-card c))
-       "\n"))
 
 (defn- no-thunderbolt-card-in-pc? [{{:keys [name]} :thunderbolt-card}]
   (= (:name no-thunderbolt-card) name))
@@ -164,8 +146,28 @@
     (filter valid-game-pc?)
     (filter valid-media-pc?)
     (filter are-two-mbs-owned?)
-    (filter only-one-optane-card?)
+    (filter at-most-one-optane-card?)
     (map create-pcs-map)))
+
+(defn- total-cost-comparator [el1 el2]
+  (< (:total-additional-cost el1) (:total-additional-cost el2)))
+
+(defn- produce-description [desc c]
+  (str "\t"
+       desc
+       ": "
+       (:name (:mb c))
+       " in "
+       (:name (:case c))
+       " with "
+       (:name (:optical-drive c))
+       " and "
+       (:name (:cpu c))
+       " and "
+       (:name (:thunderbolt-card c))
+       " and "
+       (:name (:optane-card c))
+       "\n"))
 
 (defn -main
   "I don't do a whole lot ... yet."
