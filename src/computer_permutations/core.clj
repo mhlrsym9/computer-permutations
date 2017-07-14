@@ -67,23 +67,16 @@
     (= "short blu-ray" (:name optical-drive))
     (= "long blu-ray" (:name optical-drive))))
 
-(defn- all-different-mbs? [c1 c2 c3]
-  (let [c1-check (:name (:mb c1))
-        c2-check (:name (:mb c2))
-        c3-check (:name (:mb c3))]
-    (and (not= c1-check c2-check)
-         (not= c2-check c3-check)
-         (not= c3-check c1-check))))
+(defn- all-different-names? [names]
+  (every? true? (map #(apply not= %) (combo/combinations names 2))))
 
-(defn- all-different-cases? [c1 c2 c3]
-  (let [c1-check (:name (:case c1))
-        c2-check (:name (:case c2))
-        c3-check (:name (:case c3))]
-    (and (not= c1-check c2-check)
-         (not= c2-check c3-check)
-         (not= c3-check c1-check))))
+(defn- all-different-mbs? [l]
+  (all-different-names? (map #(:name (:mb %)) l)))
 
-(defn- valid-game-pc? [game]
+(defn- all-different-cases? [l]
+  (all-different-names? (map #(:name (:case %)) l)))
+
+(defn- valid-game-pc? [[game _ _]]
   (let [mb-name (:name (:mb game))
         case-name (:name (:case game))
         cpu-name (:name (:cpu game))]
@@ -92,16 +85,16 @@
          (or (= "ASRock Z270 Supercarrier" mb-name)
              (= "Asus Z170 WS" mb-name)))))
 
-(defn- valid-media-pc? [{{:keys [name]} :case}]
+(defn- valid-media-pc? [[_ _ {{:keys [name]} :case}]]
   (= "Phanteks P400S" name))
 
-(defn- are-two-mbs-owned? [c1 c2 c3]
-  (let [l (map (fn [{{:keys [owned?]} :mb}] owned?) (list c1 c2 c3))]
-    (= 2 (count (filter true? l)))))
+(defn- are-two-mbs-owned? [l]
+  (let [owned-l (map (fn [{{:keys [owned?]} :mb}] owned?) l)]
+    (= 2 (count (filter true? owned-l)))))
 
-(defn- only-one-optane-card? [c1 c2 c3]
-  (let [l (map (fn [{{:keys [name]} :optane-card}] name) (list c1 c2 c3))]
-    (= 1 (count (filter #(= % "32 GB optane") l)))))
+(defn- only-one-optane-card? [l]
+  (let [optane-l (map (fn [{{:keys [name]} :optane-card}] name) l)]
+    (= 1 (count (filter #(= % "32 GB optane") optane-l)))))
 
 (defn- already-licensed? [c]
   (if-let [licensed-to (:licensed-to (:cpu c))]
@@ -147,20 +140,25 @@
                             {:keys [only-thunderbolt-card thunderbolt-on-board?]} :mb}]
   (or thunderbolt-on-board? (= name only-thunderbolt-card)))
 
-(defn- create-pc-permutations [[game-pcs capture-pcs media-pcs]]
-  (for [game (filter is-thunderbolt-pc? game-pcs)
-        capture (filter is-thunderbolt-pc? capture-pcs)
-        media (filter no-thunderbolt-card-in-pc? media-pcs)
-        :when (and (all-different-mbs? game capture media)
-                   (all-different-cases? game capture media)
-                   (valid-game-pc? game)
-                   (valid-media-pc? media)
-                   (are-two-mbs-owned? game capture media)
-                   (only-one-optane-card? game capture media))]
-    {:game game :capture capture :media media :total-additional-cost (calculate-additional-cost game capture media)}))
+(defn- is-correct-thunderbolt-configuration? [[game capture media]]
+  (and (is-thunderbolt-pc? game)
+       (is-thunderbolt-pc? capture)
+       (no-thunderbolt-card-in-pc? media)))
 
-(defn- create-all-pc-permutations [[cpus1 cpus2 cpus3]]
-  (mapcat create-pc-permutations (combo/permutations (list cpus1 cpus2 cpus3))))
+(defn- create-pcs-map [[game capture media]]
+  {:game game :capture capture :media media :total-additional-cost (calculate-additional-cost game capture media)})
+
+(defn- create-all-pc-permutations [l]
+  (->>
+    (mapcat #(apply combo/cartesian-product %) (combo/permutations l))
+    (filter is-correct-thunderbolt-configuration?)
+    (filter all-different-mbs?)
+    (filter all-different-cases?)
+    (filter valid-game-pc?)
+    (filter valid-media-pc?)
+    (filter are-two-mbs-owned?)
+    (filter only-one-optane-card?)
+    (map create-pcs-map)))
 
 (defn -main
   "I don't do a whole lot ... yet."
