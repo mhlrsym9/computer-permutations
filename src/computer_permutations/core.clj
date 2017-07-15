@@ -25,9 +25,9 @@
         {:name "Phanteks Enthoo Pro Titanium Green" :size "ATX" :additional-cost 69.99}))
 
 (def cpus
-  (list {:name "i7-7700K" :licensed-to "Asus Z170 WS" :additional-cost 0}
-        {:name "i5-7500" :licensed-to "ASRock Z270M Extreme4" :additional-cost 0}
-        {:name "i5-6500t" :additional-cost 0}))
+  (list {:name "i7-7700K" :licensed-to "Asus Z170 WS" :optane? true :additional-cost 0}
+        {:name "i5-7500" :licensed-to "ASRock Z270M Extreme4" :optane? true :additional-cost 0}
+        {:name "i5-6500t" :optane? false :additional-cost 0}))
 
 (def no-thunderbolt-card {:name "No Thunderbolt card" :additional-cost 0})
 
@@ -47,10 +47,11 @@
   (list {:name "long blu-ray" :additional-cost 0}
         {:name "short blu-ray" :additional-cost 42.99}))
 
-(defn- optane-check? [mb optane-card]
+(defn- optane-check? [mb cpu optane-card]
   (let [optane-mb? (:optane? mb)
+        optane-cpu? (:optane? cpu)
         optane-card? (:optane? optane-card)]
-    (or optane-mb? (not optane-card?))))
+    (or (and optane-mb? optane-cpu?) (not optane-card?))))
 
 (defn- thunderbolt-card-check? [{:keys [only-thunderbolt-card]} {:keys [name]}]
   (or
@@ -152,9 +153,10 @@
     (filter all-different-mbs?)
     (filter all-different-cases?)
     (filter valid-game-pc?)
-    (filter valid-media-pc-even-if-has-optane?)
+    (filter valid-media-pc?)
     (filter are-two-mbs-owned?)
     (filter at-most-one-optane-card?)
+    ;    (filter (fn [[_ {{:keys [name]} :mb} _]] (= "ASRock Z270M Extreme4" name)))
     (map create-pcs-map)))
 
 (defn- total-cost-comparator [el1 el2]
@@ -181,7 +183,7 @@
   "I don't do a whole lot ... yet."
   [& args]
   (let [permutations-per-cpu (map #(for [mb motherboards case cases thunderbolt-card thunderbolt-cards optane-card optane-cards optical-drive optical-drives
-                                         :when (and (optane-check? mb optane-card)
+                                         :when (and (optane-check? mb % optane-card)
                                                     (thunderbolt-card-check? mb thunderbolt-card)
                                                     (size-check? mb case)
                                                     (cpu-check? mb %)
