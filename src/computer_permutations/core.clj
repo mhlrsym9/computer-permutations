@@ -1,4 +1,5 @@
 (ns computer-permutations.core
+  (:require [clojure.string :as s])
   (:require [clojure.math.combinatorics :as combo])
   (:gen-class))
 
@@ -20,6 +21,7 @@
         {:name "ASRock Z270 Supercarrier" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? true :only-cpu "i7-7700K" :only-case "Phanteks Pro" :additional-cost 349.99}
         {:name "ASRock Z270 ITX/AC" :size "mITX" :socket 1151 :optane? true :thunderbolt-on-board? true :additional-cost 138.99}
         {:name "Gigabyte GA-Z170X-Gaming 7" :size "ATX" :socket 1151 :optane? false :thunderbolt-on-board? true :additional-cost (- (* 119.99 1.0625) 20.) :from "MicroCenter"}
+        {:name "ASRock B150M Pro4" :size "mATX" :socket 1151 :optane? false :thunderbolt-on-board? false :additional-cost 63.99}
         ;        {:name "Gigabyte GA-Z270-UD5" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? true :additional-cost (* 199.99 1.0625)}
         ;        {:name "ASRock H170 Pro4S" :size "ATX" :socket 1151 :optane? false :thunderbolt-on-board? false :additional-cost 69.99}
         ;        {:name "Gigabyte GA-H110M-M.2" :size "mATX" :socket 1151 :optane? false :thunderbolt-on-board? false :additional-cost 46.99}
@@ -135,9 +137,10 @@
              (= "Asus Z170 WS" mb-name)
              (= "Asus Z270 WS" mb-name)))))
 
-(defn- valid-capture-pc? [[ _ {:keys [cpu optical-drive]} _]]
-  (let [[cpu-name optical-drive-name] (map :name (list cpu optical-drive))]
-    (and (= cpu-name low-power-cpu-name)
+(defn- valid-capture-pc? [[ _ {:keys [optical-drive mb]} _]]
+  (let [optical-drive-name (:name optical-drive)
+        socket (:socket mb)]
+    (and (= 1151 socket)
          (not= no-optical-drive-name optical-drive-name))))
 
 (defn- valid-media-pc? [[_ _ {:keys [case optane-card optical-drive]}]]
@@ -169,15 +172,6 @@
 (defn- use-the-one-optane-card? [l]
   (= 1 (count-of-number-of-optane-cards-used l)))
 
-(defn- is-6500t-cpu-used? [l]
-  (seq (filter #(= low-power-cpu-name %) (map (fn [c] (get-in c [:cpu :name])) l))))
-
-(defn- is-asrock-z270m-mb-used? [l]
-  (seq (filter #(= asrock-z270m-extreme4-mb-name %) (map (fn [c] (get-in c [:mb :name])) l))))
-
-(defn- is-asus-z170-ws-mb-used? [l]
-  (seq (filter #(= asus-z170-ws-mb-name %) (map (fn [c] (get-in c [:mb :name])) l))))
-
 (defn- already-licensed? [c]
   (if-let [licensed-to (get-in c [:cpu :licensed-to])]
     (= licensed-to (get-in c [:mb :name]))
@@ -191,25 +185,31 @@
          100))))
 
 (defn- is-at-least-one-pc-unlicensed? [l]
-  (nil? (seq (filter true? (map #(already-licensed? %) l)))))
+  (seq (filter false? (map #(already-licensed? %) l))))
 
 (defn- calculate-additional-cost [l]
-  (- (reduce + (map calculate-additional-cost-of-pc l)) (if is-at-least-one-pc-unlicensed? 100 0)))
+  (- (reduce + (map calculate-additional-cost-of-pc l)) (if (is-at-least-one-pc-unlicensed? l) 100 0)))
+
+(defn- merge-lost-data [v1 v2]
+  {:lost-cost       (+ (:lost-cost v1) (:lost-cost v2))
+   :lost-components (concat (:lost-components v1) (:lost-components v2))})
 
 (defn- calculate-lost-cost-of-missing-component [bag-of-components component l]
   (let [look-for-lost-costs-in-bag (filter :lost-cost bag-of-components)
         names-of-the-component (map #(get-in % [component :name]) l)]
-    (reduce + (map (fn [component]
-                     (let [name (:name component)]
-                       (if (seq (filter #(= name %) names-of-the-component))
-                         0.
-                         (:lost-cost component))))
-                   look-for-lost-costs-in-bag))))
+    (reduce merge-lost-data
+            (map (fn [component]
+                   (let [name (:name component)]
+                     (if (seq (filter #(= name %) names-of-the-component))
+                       {:lost-cost 0. :lost-components []}
+                       {:lost-cost (:lost-cost component) :lost-components [name]})))
+                 look-for-lost-costs-in-bag))))
 
 (defn- calculate-lost-cost [l]
-  (reduce + (map #(calculate-lost-cost-of-missing-component %1 %2 l)
-                 [motherboards cpus cases optane-cards optical-drives thunderbolt-cards]
-                 [:mb :cpu :case :optane-card :optical-drive :thunderbolt-card])))
+  (reduce merge-lost-data
+          (map #(calculate-lost-cost-of-missing-component %1 %2 l)
+               [motherboards cpus cases optane-cards optical-drives thunderbolt-cards]
+               [:mb :cpu :case :optane-card :optical-drive :thunderbolt-card])))
 
 (defn- no-thunderbolt-card-in-pc? [{{:keys [name]} :thunderbolt-card}]
   (= (:name no-thunderbolt-card) name))
@@ -229,9 +229,13 @@
        (use-the-asus-thunderbolt-card? l)))
 
 (defn- create-pcs-map [[game capture media :as l]]
-  {:game game :capture capture :media media
-   :total-additional-cost (calculate-additional-cost l)
-   :total-lost-cost (calculate-lost-cost l)})
+  (let [lost-data (calculate-lost-cost l)]
+    {:game                  game
+     :capture               capture
+     :media                 media
+     :total-additional-cost (calculate-additional-cost l)
+     :total-lost-cost       (:lost-cost lost-data)
+     :lost-components       (:lost-components lost-data)}))
 
 (defn- create-all-pc-permutations [all-pcs]
   (->>
@@ -280,8 +284,9 @@
                                                        (optical-drive-check? mb case optical-drive))]
                                         {:mb mb :case case :cpu % :thunderbolt-card thunderbolt-card :optane-card optane-card :optical-drive optical-drive}) cpus)
         permutations-of-three-computers (create-all-pc-permutations permutations-per-cpu)
-        names-of-permutations (map (fn [{:keys [game capture media total-additional-cost total-lost-cost]}]
+        names-of-permutations (map (fn [{:keys [game capture media total-additional-cost total-lost-cost lost-components]}]
                                      (clojure.string/join " " (list (format "Cost: %.2f [Additional Cost: %.2f Lost Cost: %.2f]\n" (+ total-additional-cost total-lost-cost) total-additional-cost total-lost-cost)
+                                                                    (str "Lost components: " (s/join ", " lost-components) "\n")
                                                                     (produce-description "Game" game)
                                                                     (produce-description "Capture" capture)
                                                                     (produce-description "Media" media))))
