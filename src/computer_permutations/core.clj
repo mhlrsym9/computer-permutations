@@ -31,7 +31,7 @@
 
         {:name "ASRock Z270 ITX/AC" :size "mITX" :socket 1151 :optane? true :thunderbolt-on-board? true :additional-cost 138.99}
         {:name "Gigabyte GA-Z170X-Gaming 7" :size "ATX" :socket 1151 :optane? false :thunderbolt-on-board? true :additional-cost (- (* 119.99 1.0625) 20.) :from "MicroCenter"}
-        {:name "ASRock H270 Pro4" :size "mTX" :socket 1151 :optane? false :thunderbolt-on-board? false :only-thunderbolt-card "ASRock Thunderbolt3" :additional-cost 89.99}
+        {:name "ASRock H270 Pro4" :size "ATX" :socket 1151 :optane? false :thunderbolt-on-board? false :only-thunderbolt-card "ASRock Thunderbolt3" :additional-cost 89.99}
         asrock-z270m-extreme4-mb-2
 
         {:name "Gigabyte GA-Z270-UD5" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? true :additional-cost (* 199.99 1.0625)}
@@ -50,7 +50,8 @@
         silencio-case
         {:name "Phanteks P400S" :size "ATX" :lost-cost (+ 79.99 15.80 -8.80 2.99)}
 
-        {:name "be quiet PURE BASE 600 - Black" :size "ATX" :additional-cost 89.90}
+        {:name "Fractal Design Core 2300 Black" :size "ATX" :additional-cost 59.99}
+        ;        {:name "be quiet PURE BASE 600 - Black" :size "ATX" :additional-cost 89.90}
         ;        {:name "Corsair Carbide Series 300R" :size "ATX" :additional-cost (- (* 72.99 1.0625) 10.) :from "MicroCenter"}
         ;        {:name "Corsair Carbide Series 300R" :size "ATX" :additional-cost 59.99 :from "NewEgg"}
         ;        {:name "Phanteks Enthoo Pro Titanium Green" :size "ATX" :additional-cost 69.99}
