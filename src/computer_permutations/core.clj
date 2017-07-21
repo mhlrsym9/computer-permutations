@@ -2,153 +2,13 @@
   (:require [clojure.string :as s])
   (:require [clojure.math.combinatorics :as combo])
   (:require [clojure.set :as set])
+  (:use [computer-permutations.motherboards])
+  (:use [computer-permutations.cases])
+  (:use [computer-permutations.cpus])
+  (:use [computer-permutations.thunderbolt-cards])
+  (:use [computer-permutations.optane-cards])
+  (:use [computer-permutations.optical-drives])
   (:gen-class))
-
-(def asrock-z270m-extreme4-mb {:name "ASRock Z270M Extreme4" :size "mATX" :socket 1151 :optane? true :thunderbolt-on-board? false :only-thunderbolt-card "ASRock Thunderbolt3" :lost-cost 138.99})
-(def asrock-z270m-extreme4-mb-name (:name asrock-z270m-extreme4-mb))
-
-(def asus-z170-ws-mb {:name "Asus Z170 WS" :size "ATX" :socket 1151 :optane? false :thunderbolt-on-board? false :only-thunderbolt-card "Asus Thunderbolt3" :lost-cost 266.87})
-(def asus-z170-ws-mb-name (:name asus-z170-ws-mb))
-
-(def gigabyte-ga-ex58-ud4p {:name "Gigabyte GA-EX58-UD4P" :socket 1366 :optane? false :thunderbolt-on-board? false :only-cpu "i7-920" :lost-cost 0})
-(def gigabyte-ga-ex58-ud4p-name (:name gigabyte-ga-ex58-ud4p))
-
-(def core-2-duo-mb {:name "Core 2 Duo MB" :size "ATX" :socket 775 :optane? false :thunderbolt-on-board? false :only-cpu "Core 2 Duo E8400" :lost-cost 0})
-(def core-2-duo-mb-name (:name core-2-duo-mb))
-
-(def core-2-quad-mb {:name "Core 2 Quad MB" :size "ATX" :socket 775 :optane? false :thunderbolt-on-board? false :only-cpu "Intel Core 2 Quad Q9500" :lost-cost 0})
-(def core-2-quad-mb-name (:name core-2-quad-mb))
-
-(def asus-z270-ws-mb {:name "Asus Z270 WS" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? false :only-cpu "i7-7700K" :only-thunderbolt-card "Asus Thunderbolt3" :additional-cost 379.99})
-(def asus-z270-ws-mb-name (:name asus-z270-ws-mb))
-
-(def asrock-z270-supercarrier-mb {:name "ASRock Z270 Supercarrier" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? true :only-cpu "i7-7700K" :additional-cost 349.99})
-(def asrock-z270-supercarrier-mb-name (:name asrock-z270-supercarrier-mb))
-
-(def gigabyte-ga-z170x-gaming7 {:name "Gigabyte GA-Z170X-Gaming 7" :size "ATX" :socket 1151 :optane? false :thunderbolt-on-board? true :additional-cost (- (* 119.99 1.0625) 20.) :from "MicroCenter"})
-
-(def asrock-h270-pro4 {:name "ASRock H270 Pro4" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? false :only-thunderbolt-card "ASRock Thunderbolt3" :additional-cost 89.99})
-
-(def asrock-b150m-pro4 {:name "ASRock B150M Pro4" :size "mATX" :socket 1151 :optane? false :thunderbolt-on-board? false :additional-cost (- 78.99 15)})
-
-(def asrock-z270-itx {:name "ASRock Z270 ITX/AC" :size "mITX" :socket 1151 :optane? true :thunderbolt-on-board? true :additional-cost 138.99})
-
-(def asrock-z270m-extreme4-mb-2 {:name "ASRock Z270M Extreme4 2" :size "mATX" :socket 1151 :optane? true :thunderbolt-on-board? false :only-thunderbolt-card "ASRock Thunderbolt3" :additional-cost 197.95})
-(def asrock-z270m-extreme4-mb-2-name (:name asrock-z270m-extreme4-mb-2))
-
-(def gigabyte-ga-z270-ud5 {:name "Gigabyte GA-Z270-UD5" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? true :additional-cost (* 199.99 1.0625)})
-
-(def motherboards
-  (list asrock-z270m-extreme4-mb
-        asus-z170-ws-mb
-        gigabyte-ga-ex58-ud4p
-        core-2-duo-mb
-        core-2-quad-mb
-
-        asus-z270-ws-mb
-        asrock-z270-supercarrier-mb
-
-        gigabyte-ga-z170x-gaming7
-        asrock-h270-pro4
-        asrock-b150m-pro4
-
-        asrock-z270-itx
-        asrock-z270m-extreme4-mb-2
-        gigabyte-ga-z270-ud5
-        ))
-
-(def phanteks-enthoo-pro {:name "Phanteks Enthoo Pro" :size "ATX" :lost-cost 84.99})
-(def phanteks-enthoo-pro-name (:name phanteks-enthoo-pro))
-
-(def silencio-case {:name "Cooler Master Silencio 352" :size "mATX" :lost-cost 57.99})
-(def silencio-case-name (:name silencio-case))
-
-(def phanteks-eclipse-p400s {:name "Phanteks P400S" :size "ATX" :lost-cost (+ 79.99 15.80 -8.80 2.99)})
-(def phanteks-eclipse-p400s-name (:name phanteks-eclipse-p400s))
-
-(def bequiet-purebase600 {:name "be quiet! Pure Base 600" :size "ATX" :lost-cost 89.90})
-(def bequiet-purebase600-name (:name bequiet-purebase600))
-
-(def fractal-design-define-c {:name "Fractal Design Define C" :size "ATX" :lost-cost 79.98})
-(def fractal-design-define-c-name (:name fractal-design-define-c))
-
-(def corsair-100r {:name "Corsair 100R" :size "ATX" :lost-cost 59.99})
-(def corsair-100r-name (:name corsair-100r))
-
-(def fractal-design-core2300 {:name "Fractal Design Core 2300" :size "ATX" :additional-cost 59.99})
-(def fractal-design-core2300-name (:name fractal-design-core2300))
-
-(def cases
-  (list phanteks-enthoo-pro
-        silencio-case
-        phanteks-eclipse-p400s
-        bequiet-purebase600
-        fractal-design-define-c
-        corsair-100r
-
-        fractal-design-core2300
-        ))
-
-(def game-cpu {:name "i7-7700K" :socket 1151 :licensed-to asus-z170-ws-mb-name :optane? true :lost-cost (* 299.99 1.0625)})
-(def game-cpu-name (:name game-cpu))
-
-(def high-power-kaby-lake-cpu {:name "i5-7500" :socket 1151 :licensed-to asrock-z270m-extreme4-mb-name :optane? true :lost-cost (* 179.99 1.0625)})
-(def high-power-kaby-lake-cpu-name (:name high-power-kaby-lake-cpu))
-
-(def low-power-kaby-lake-cpu {:name "i5-7400t" :socket 1151 :optane? true :lost-cost 135.87})
-(def low-power-kaby-lake-cpu-name (:name low-power-kaby-lake-cpu))
-
-(def low-power-skylake-cpu {:name "i5-6500t" :socket 1151 :optane? false :lost-cost (+ 107.50 6.65)})
-(def low-power-skylake-cpu-name (:name low-power-skylake-cpu))
-
-(def i7-920-cpu {:name "i7-920" :socket 1366 :licensed-to gigabyte-ga-ex58-ud4p-name :optane? false :lost-cost 0})
-(def i7-920-cpu-name (:name i7-920-cpu))
-
-(def core-2-duo-cpu {:name "Core 2 Duo E8400" :socket 775 :licensed-to core-2-duo-mb-name :optane? false :lost-cost 0})
-(def core-2-duo-cpu-name (:name core-2-duo-cpu))
-
-(def core-2-quad-cpu {:name "Intel Core 2 Quad Q9500" :socket 775 :licensed-to core-2-quad-mb-name :optane? false :lost-cost 0})
-(def core-2-quad-cpu-name (:name core-2-quad-cpu))
-
-(def cpus (list game-cpu high-power-kaby-lake-cpu low-power-kaby-lake-cpu low-power-skylake-cpu i7-920-cpu core-2-duo-cpu core-2-quad-cpu))
-
-(def asrock-thunderbolt3-card {:name "ASRock Thunderbolt3" :additional-cost 79.99})
-(def asrock-thunderbolt3-card-name (:name asrock-thunderbolt3-card))
-
-(def asus-thunderbolt-card {:name "Asus Thunderbolt3" :lost-cost 59.49})
-(def asus-thunderbolt-card-name (:name asus-thunderbolt-card))
-
-(def no-thunderbolt-card {:name "No Thunderbolt card" :additional-cost 0 :lost-cost 0})
-(def no-thunderbolt-card-name (:name no-thunderbolt-card))
-
-(def thunderbolt-cards (list asrock-thunderbolt3-card asus-thunderbolt-card no-thunderbolt-card))
-
-(def optane-card-32GB {:name "32 GB optane" :optane? true :lost-cost (* 69.99 1.0625)})
-(def optane-card-32GB-name (:name optane-card-32GB))
-
-(def no-optane-card {:name "no optane" :optane? false :additional-cost 0 :lost-cost 0})
-(def no-optane-card-name (:name no-optane-card))
-
-(def optane-cards (list optane-card-32GB no-optane-card))
-
-(def no-optical-drive {:name "no optical drive" :additional-cost 0 :lost-cost 0})
-(def no-optical-drive-name (:name no-optical-drive))
-
-(def short-blu-ray {:name "short blu-ray" :additional-cost 42.99})
-(def short-blu-ray-name (:name short-blu-ray))
-
-(def long-blu-ray {:name "long blu-ray" :lost-cost 0})
-(def long-blu-ray-name (:name long-blu-ray))
-
-(def long-blu-ray-2 {:name "long blu-ray 2" :lost-cost 0})
-(def long-blu-ray-2-name (:name long-blu-ray))
-
-(def long-blu-ray-3 {:name "long blu-ray 3" :lost-cost 0})
-(def long-blu-ray-3-name (:name long-blu-ray))
-
-(def optical-drives (list long-blu-ray long-blu-ray-2 long-blu-ray-3 short-blu-ray no-optical-drive))
-(def long-blu-ray-drives (list long-blu-ray long-blu-ray-2 long-blu-ray-3))
-(def long-blu-ray-drive-names (map #(:name %) long-blu-ray-drives))
 
 (defn- optane-check? [mb cpu optane-card]
   (let [[optane-mb? optane-cpu? optane-card?] (map :optane? (list mb cpu optane-card))]
@@ -189,7 +49,7 @@
 
 (defn- valid-capture-pc? [{{:keys [optical-drive cpu case]} :capture}]
   (let [[case-name cpu-name optical-drive-name] (map :name (list case cpu optical-drive))]
-    (and (some #{cpu-name} [low-power-skylake-cpu-name low-power-kaby-lake-cpu-name])
+    (and (some #{cpu-name} [low-power-skylake-cpu-name low-power-kaby-lake-cpu-name high-power-kaby-lake-cpu-name])
          (not= no-optical-drive-name optical-drive-name)
          (some #{case-name} [silencio-case-name bequiet-purebase600-name]))))
 
