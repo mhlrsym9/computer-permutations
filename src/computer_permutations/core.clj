@@ -16,10 +16,13 @@
 (def core-2-duo-mb {:name "Core 2 Duo MB" :size "ATX" :socket 775 :optane? false :thunderbolt-on-board? false :only-cpu "Core 2 Duo E8400" :lost-cost 0})
 (def core-2-duo-mb-name (:name core-2-duo-mb))
 
+(def core-2-quad-mb {:name "Core 2 Quad MB" :size "ATX" :socket 775 :optane? false :thunderbolt-on-board? false :only-cpu "Intel Core 2 Quad Q9500" :lost-cost 0})
+(def core-2-quad-mb-name (:name core-2-quad-mb))
+
 (def asus-z270-ws-mb {:name "Asus Z270 WS" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? false :only-cpu "i7-7700K" :only-thunderbolt-card "Asus Thunderbolt3" :additional-cost 379.99})
 (def asus-z270-ws-mb-name (:name asus-z270-ws-mb))
 
-(def asrock-z270-supercarrier-mb {:name "ASRock Z270 Supercarrier" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? true :only-cpu "i7-7700K" :only-case "Phanteks Pro" :additional-cost 349.99})
+(def asrock-z270-supercarrier-mb {:name "ASRock Z270 Supercarrier" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? true :only-cpu "i7-7700K" :additional-cost 349.99})
 (def asrock-z270-supercarrier-mb-name (:name asrock-z270-supercarrier-mb))
 
 (def gigabyte-ga-z170x-gaming7 {:name "Gigabyte GA-Z170X-Gaming 7" :size "ATX" :socket 1151 :optane? false :thunderbolt-on-board? true :additional-cost (- (* 119.99 1.0625) 20.) :from "MicroCenter"})
@@ -40,6 +43,7 @@
         asus-z170-ws-mb
         gigabyte-ga-ex58-ud4p
         core-2-duo-mb
+        core-2-quad-mb
 
         asus-z270-ws-mb
         asrock-z270-supercarrier-mb
@@ -95,15 +99,18 @@
 (def low-power-kaby-lake-cpu-name (:name low-power-kaby-lake-cpu))
 
 (def low-power-skylake-cpu {:name "i5-6500t" :socket 1151 :optane? false :lost-cost (+ 107.50 6.65)})
-(def low-power-cpu-name (:name low-power-skylake-cpu))
+(def low-power-skylake-cpu-name (:name low-power-skylake-cpu))
 
 (def i7-920-cpu {:name "i7-920" :socket 1366 :licensed-to gigabyte-ga-ex58-ud4p-name :optane? false :lost-cost 0})
 (def i7-920-cpu-name (:name i7-920-cpu))
 
-(def old-cpu {:name "Core 2 Duo E8400" :socket 775 :licensed-to core-2-duo-mb-name :optane? false :lost-cost 0})
-(def old-cpu-name (:name old-cpu))
+(def core-2-duo-cpu {:name "Core 2 Duo E8400" :socket 775 :licensed-to core-2-duo-mb-name :optane? false :lost-cost 0})
+(def core-2-duo-cpu-name (:name core-2-duo-cpu))
 
-(def cpus (list game-cpu high-power-kaby-lake-cpu low-power-kaby-lake-cpu low-power-skylake-cpu i7-920-cpu old-cpu))
+(def core-2-quad-cpu {:name "Intel Core 2 Quad Q9500" :socket 775 :licensed-to core-2-quad-mb-name :optane? false :lost-cost 0})
+(def core-2-quad-cpu-name (:name core-2-quad-cpu))
+
+(def cpus (list game-cpu high-power-kaby-lake-cpu low-power-kaby-lake-cpu low-power-skylake-cpu i7-920-cpu core-2-duo-cpu core-2-quad-cpu))
 
 (def asrock-thunderbolt3-card {:name "ASRock Thunderbolt3" :additional-cost 79.99})
 (def asrock-thunderbolt3-card-name (:name asrock-thunderbolt3-card))
@@ -141,6 +148,7 @@
 
 (def optical-drives (list long-blu-ray long-blu-ray-2 long-blu-ray-3 short-blu-ray no-optical-drive))
 (def long-blu-ray-drives (list long-blu-ray long-blu-ray-2 long-blu-ray-3))
+(def long-blu-ray-drive-names (map #(:name %) long-blu-ray-drives))
 
 (defn- optane-check? [mb cpu optane-card]
   (let [[optane-mb? optane-cpu? optane-card?] (map :optane? (list mb cpu optane-card))]
@@ -176,44 +184,34 @@
   (let [[mb-name case-name cpu-name optical-drive-name] (map :name (list mb case cpu optical-drive))]
     (and (= game-cpu-name cpu-name)
          (= phanteks-enthoo-pro-name case-name)
-         (some #(= % optical-drive) long-blu-ray-drives)
-         (or (= asrock-z270-supercarrier-mb-name mb-name)
-             (= asus-z170-ws-mb-name mb-name)
-             (= asus-z270-ws-mb-name mb-name)))))
+         (some #{optical-drive-name} long-blu-ray-drive-names)
+         (some #{mb-name} [asrock-z270-supercarrier-mb-name asus-z170-ws-mb-name asus-z270-ws-mb-name]))))
 
-(defn- valid-capture-pc? [{{:keys [optical-drive mb case]} :capture}]
-  (let [optical-drive-name (:name optical-drive)
-        socket (:socket mb)
-        case-name (:name case)]
-    (and (= 1151 socket)
+(defn- valid-capture-pc? [{{:keys [optical-drive cpu case]} :capture}]
+  (let [[case-name cpu-name optical-drive-name] (map :name (list case cpu optical-drive))]
+    (and (some #{cpu-name} [low-power-skylake-cpu-name low-power-kaby-lake-cpu-name])
          (not= no-optical-drive-name optical-drive-name)
-         (or (= silencio-case-name case-name)
-             (= bequiet-purebase600-name case-name)))))
+         (some #{case-name} [silencio-case-name bequiet-purebase600-name]))))
 
-(defn- valid-sleep-pc? [{{:keys [case optane-card optical-drive mb]} :sleep}]
-  (let [[case-name optane-card-name optical-drive-name] (map :name (list case optane-card optical-drive))
-        socket (:socket mb)]
+(defn- valid-sleep-pc? [{{:keys [case optane-card optical-drive cpu]} :sleep}]
+  (let [[case-name optane-card-name optical-drive-name cpu-name] (map :name (list case optane-card optical-drive cpu))]
     (and (= phanteks-eclipse-p400s-name case-name)
          (= no-optane-card-name optane-card-name)
          (= no-optical-drive-name optical-drive-name)
-         (or (= 775 socket)
-             (= 1151 socket)))))
+         (some #{cpu-name} [low-power-kaby-lake-cpu-name low-power-skylake-cpu-name core-2-duo-cpu-name]))))
 
-(defn- valid-media-pc? [{{:keys [case optane-card optical-drive mb]} :media}]
-  (let [[case-name optane-card-name optical-drive-name] (map :name (list case optane-card optical-drive))
-        socket (:socket mb)]
+(defn- valid-media-pc? [{{:keys [case optane-card optical-drive cpu]} :media}]
+  (let [[case-name optane-card-name optical-drive-name cpu-name] (map :name (list case optane-card optical-drive cpu))]
     (and (= fractal-design-define-c-name case-name)
          (= no-optane-card-name optane-card-name)
          (= no-optical-drive-name optical-drive-name)
-         (or (= 1366 socket)
-             (= 1151 socket)))))
+         (some #{cpu-name} [high-power-kaby-lake-cpu-name i7-920-cpu-name]))))
 
 (defn- valid-play-pc? [{{:keys [mb case cpu optical-drive]} :play}]
   (let [[mb-name case-name cpu-name optical-drive-name] (map :name (list mb case cpu optical-drive))]
-    (and (= i7-920-cpu-name cpu-name)
+    (and (some #{cpu-name} [core-2-quad-cpu-name i7-920-cpu-name])
          (= corsair-100r-name case-name)
-         (some #(= (:name %) optical-drive-name) long-blu-ray-drives)
-         (= gigabyte-ga-ex58-ud4p-name mb-name))))
+         (some #{optical-drive-name} long-blu-ray-drive-names))))
 
 (defn- all-different-names? [names]
   (every? true? (map #(apply not= %) (combo/combinations names 2))))
@@ -346,6 +344,17 @@
   (< (+ (get-in el1 [:total-additional-cost :cost]) (get-in el1 [:total-lost-cost :cost]))
      (+ (get-in el2 [:total-additional-cost :cost]) (get-in el2 [:total-lost-cost :cost]))))
 
+(defn- names-of-all-components [{:keys [game capture sleep media play]}]
+  (apply str (map #(let [{:keys [mb case cpu optical-drive optane-card thunderbolt-card]} %
+                         optical-drive-name (:name optical-drive)]
+                     (str (:name mb)
+                          (:name case)
+                          (:name cpu)
+                          (:name optane-card)
+                          (:name thunderbolt-card)
+                          (if (some #{optical-drive-name} long-blu-ray-drive-names) long-blu-ray-name optical-drive-name)))
+                  (list game capture sleep media play))))
+
 (defn- produce-description [desc c]
   (str "\t"
        desc
@@ -374,6 +383,7 @@
                                                        (optical-drive-check? mb case optical-drive))]
                                         {:mb mb :case case :cpu % :thunderbolt-card thunderbolt-card :optane-card optane-card :optical-drive optical-drive}) cpus)
         permutations-of-three-computers (create-all-pc-permutations permutations-per-cpu)
+        all-unique-valid-pc-collections (map #(first %) (partition-by names-of-all-components (sort-by names-of-all-components permutations-of-three-computers)))
         names-of-permutations (map (fn [{:keys [game capture sleep media play total-additional-cost total-lost-cost]}]
                                      (let [additional-cost (:cost total-additional-cost)
                                            additional-components (:components total-additional-cost)
@@ -387,6 +397,7 @@
                                                                       (produce-description "Sleep" sleep)
                                                                       (produce-description "Media" media)
                                                                       (produce-description "Play" play)))))
-                                   (sort total-cost-comparator permutations-of-three-computers))]
+                                   (sort total-cost-comparator all-unique-valid-pc-collections))]
     (dorun (map #(println %) names-of-permutations))
+    (println (count permutations-of-three-computers))
     (println (count names-of-permutations))))
