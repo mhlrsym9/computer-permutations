@@ -259,5 +259,6 @@
                                                                       (produce-description "Play" play)))))
                                    (sort total-cost-comparator all-unique-valid-pc-collections))]
     (dorun (map #(println %) names-of-permutations))
+    (println (count permutations-per-cpu))
     (println (count permutations-of-three-computers))
     (println (count names-of-permutations))))
