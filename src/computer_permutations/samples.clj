@@ -6,19 +6,19 @@
   (:use [computer-permutations.optane-cards])
   (:use [computer-permutations.optical-drives]))
 
-(def game-pc-sample {:mb               asus-z170-ws-mb
+(def game-pc-sample {:mb               asrock-z270-supercarrier-mb
                      :case             phanteks-enthoo-pro
                      :cpu              game-cpu
-                     :thunderbolt-card asus-thunderbolt-card
+                     :thunderbolt-card no-thunderbolt-card
                      :optane-card      no-optane-card
                      :optical-drive    long-blu-ray})
 
 (def capture-pc-sample {:mb               asrock-h270-pro4
-                        :case             silencio-case
+                        :case             bequiet-purebase600
                         :cpu              low-power-kaby-lake-cpu
                         :thunderbolt-card asrock-thunderbolt3-card
                         :optane-card      optane-card-32GB
-                        :optical-drive    short-blu-ray})
+                        :optical-drive    long-blu-ray-3})
 
 (def sleep-pc-sample {:mb               asrock-b150m-pro4
                       :case             phanteks-eclipse-p400s
@@ -27,7 +27,7 @@
                       :optane-card      no-optane-card
                       :optical-drive    no-optical-drive})
 
-(def media-pc-sample {:mb               asrock-z270m-extreme4-mb
+(def media-pc-sample {:mb               asus-z170-ws-mb
                       :case             fractal-design-define-c
                       :cpu              high-power-kaby-lake-cpu
                       :thunderbolt-card no-thunderbolt-card
