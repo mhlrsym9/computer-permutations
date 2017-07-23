@@ -27,7 +27,7 @@
                       :optane-card      no-optane-card
                       :optical-drive    no-optical-drive})
 
-(def media-pc-sample {:mb               asus-z170-ws-mb
+(def media-pc-sample {:mb               asrock-z270m-extreme4-mb
                       :case             fractal-design-define-c
                       :cpu              high-power-kaby-lake-cpu
                       :thunderbolt-card no-thunderbolt-card
@@ -41,8 +41,16 @@
                      :optane-card      no-optane-card
                      :optical-drive    long-blu-ray-2})
 
+(def dive-pc-sample {:mb               asus-z170-ws-mb
+                     :case             phanteks-enthoo-pro-2
+                     :cpu              high-power-skylake-cpu
+                     :thunderbolt-card asus-thunderbolt-card
+                     :optane-card      no-optane-card
+                     :optical-drive    no-optical-drive})
+
 (def sample-pc-collection {:game    game-pc-sample
                            :capture capture-pc-sample
                            :sleep   sleep-pc-sample
                            :media   media-pc-sample
-                           :play    play-pc-sample})
+                           :play    play-pc-sample
+                           :dive    dive-pc-sample})

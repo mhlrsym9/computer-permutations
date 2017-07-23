@@ -13,6 +13,9 @@
 (def low-power-skylake-cpu {:name "i5-6500t" :socket 1151 :optane? false :lost-cost (+ 107.50 6.65)})
 (def low-power-skylake-cpu-name (:name low-power-skylake-cpu))
 
+(def intel-e5-2609-v3-cpu {:name "E5-2609v3" :socket 2011 :licensed-to gigabyte-ga-x99p-sli-mb :optane? false :lost-cost 183.60})
+(def intel-e5-2609-v3-cpu-name (:name intel-e5-2609-v3-cpu))
+
 (def i7-920-cpu {:name "i7-920" :socket 1366 :licensed-to gigabyte-ga-ex58-ud4p-name :optane? false :lost-cost 0})
 (def i7-920-cpu-name (:name i7-920-cpu))
 
@@ -22,8 +25,21 @@
 (def core-2-quad-cpu {:name "Intel Core 2 Quad Q9500" :socket 775 :licensed-to core-2-quad-mb-name :optane? false :lost-cost 0})
 (def core-2-quad-cpu-name (:name core-2-quad-cpu))
 
-(def cpus (list game-cpu high-power-kaby-lake-cpu low-power-kaby-lake-cpu low-power-skylake-cpu i7-920-cpu
+(def high-power-skylake-cpu {:name "i5-6400" :socket 1151 :optane? false :additional-cost 184.99})
+(def high-power-skylake-cpu-name (:name high-power-skylake-cpu))
+
+(def cpus (list intel-e5-2609-v3-cpu
+                game-cpu
+                high-power-kaby-lake-cpu
+                low-power-kaby-lake-cpu
+                low-power-skylake-cpu
+                high-power-skylake-cpu
+                i7-920-cpu
                 ; core-2-duo-cpu core-2-quad-cpu
                 ))
+
+(def non-game-socket-1151-cpus (remove (fn [{:keys [name]}] (= game-cpu-name name)) (filter (fn [{:keys [socket]}] (= 1151 socket)) cpus)))
+(def non-game-socket-1151-cpu-names (map #(:name %) non-game-socket-1151-cpus))
+
 
 

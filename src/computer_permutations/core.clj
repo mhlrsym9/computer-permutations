@@ -45,11 +45,11 @@
     (and (= game-cpu-name cpu-name)
          (= phanteks-enthoo-pro-name case-name)
          (some #{optical-drive-name} long-blu-ray-drive-names)
-         (some #{mb-name} [asrock-z270-supercarrier-mb-name asus-z170-ws-mb-name asus-z270-ws-mb-name]))))
+         (some #{mb-name} [asrock-z270-supercarrier-mb-name]))))
 
 (defn- valid-capture-pc? [{{:keys [optical-drive cpu case]} :capture}]
   (let [[case-name cpu-name optical-drive-name] (map :name (list case cpu optical-drive))]
-    (and (some #{cpu-name} [low-power-skylake-cpu-name low-power-kaby-lake-cpu-name high-power-kaby-lake-cpu-name])
+    (and (some #{cpu-name} [low-power-kaby-lake-cpu-name high-power-kaby-lake-cpu-name])
          (not= no-optical-drive-name optical-drive-name)
          (some #{case-name} [silencio-case-name bequiet-purebase600-name]))))
 
@@ -58,20 +58,27 @@
     (and (= phanteks-eclipse-p400s-name case-name)
          (= no-optane-card-name optane-card-name)
          (= no-optical-drive-name optical-drive-name)
-         (some #{cpu-name} [low-power-kaby-lake-cpu-name low-power-skylake-cpu-name core-2-duo-cpu-name]))))
+         (some #{cpu-name} [core-2-duo-cpu-name low-power-skylake-cpu-name]))))
 
 (defn- valid-media-pc? [{{:keys [case optane-card optical-drive cpu]} :media}]
   (let [[case-name optane-card-name optical-drive-name cpu-name] (map :name (list case optane-card optical-drive cpu))]
     (and (= fractal-design-define-c-name case-name)
          (= no-optane-card-name optane-card-name)
          (= no-optical-drive-name optical-drive-name)
-         (some #{cpu-name} [high-power-kaby-lake-cpu-name i7-920-cpu-name]))))
+         (some #{cpu-name} [i7-920-cpu-name low-power-kaby-lake-cpu-name high-power-kaby-lake-cpu-name]))))
 
 (defn- valid-play-pc? [{{:keys [mb case cpu optical-drive]} :play}]
   (let [[mb-name case-name cpu-name optical-drive-name] (map :name (list mb case cpu optical-drive))]
     (and (some #{cpu-name} [core-2-quad-cpu-name i7-920-cpu-name])
          (= corsair-100r-name case-name)
          (some #{optical-drive-name} long-blu-ray-drive-names))))
+
+(defn- valid-dive-pc? [{{:keys [mb case cpu optical-drive]} :dive}]
+  (let [[mb-name case-name cpu-name optical-drive-name] (map :name (list mb case cpu optical-drive))]
+    (and (some #{cpu-name} [intel-e5-2609-v3-cpu-name high-power-skylake-cpu-name])
+         (some #{mb-name} [gigabyte-ga-x99p-sli-mb-name asus-z170-ws-mb-name])
+         (= phanteks-enthoo-pro-2-name case-name)
+         (= no-optical-drive-name optical-drive-name))))
 
 (defn- all-different-names? [names]
   (every? true? (map #(apply not= %) (combo/combinations names 2))))
@@ -124,9 +131,10 @@
         flipped-capture2 (assoc flipped-capture :thunderbolt-card (:thunderbolt-card pc2))]
     (some is-flipped-capture-valid? (list flipped-capture flipped-capture2))))
 
-(defn- is-correct-thunderbolt-configuration? [{:keys [game capture sleep media play]}]
+(defn- is-correct-thunderbolt-configuration? [{:keys [game capture sleep media play dive]}]
   (and (is-thunderbolt-pc? game)
        (is-thunderbolt-pc? capture)
+       (is-thunderbolt-pc? dive)
        (no-thunderbolt-card-in-pc? sleep)
        (no-thunderbolt-card-in-pc? media)
        (not (is-thunderbolt-pc? play))
@@ -186,11 +194,12 @@
         capture-pcs (filter #(valid-capture-pc? {:capture %}) all-pcs)
         sleep-pcs (filter #(valid-sleep-pc? {:sleep %}) all-pcs)
         media-pcs (filter #(valid-media-pc? {:media %}) all-pcs)
-        play-pcs (filter #(valid-play-pc? {:play %}) all-pcs)]
+        play-pcs (filter #(valid-play-pc? {:play %}) all-pcs)
+        dive-pcs (filter #(valid-dive-pc? {:dive %}) all-pcs)]
     (->>
-      (map (fn [[game-pc capture-pc sleep-pc media-pc play-pc]]
-             {:game game-pc :capture capture-pc :sleep sleep-pc :media media-pc :play play-pc})
-           (combo/cartesian-product game-pcs capture-pcs sleep-pcs media-pcs play-pcs))
+      (map (fn [[game-pc capture-pc sleep-pc media-pc play-pc dive-pc]]
+             {:game game-pc :capture capture-pc :sleep sleep-pc :media media-pc :play play-pc :dive dive-pc})
+           (combo/cartesian-product game-pcs capture-pcs sleep-pcs media-pcs play-pcs dive-pcs))
       (filter #(and (all-different-mbs? %)
                     (all-different-cases? %)
                     (all-different-cpus? %)
@@ -204,7 +213,7 @@
   (< (+ (get-in el1 [:total-additional-cost :cost]) (get-in el1 [:total-lost-cost :cost]))
      (+ (get-in el2 [:total-additional-cost :cost]) (get-in el2 [:total-lost-cost :cost]))))
 
-(defn- names-of-all-components [{:keys [game capture sleep media play]}]
+(defn- names-of-all-components [{:keys [game capture sleep media play dive]}]
   (apply str (map #(let [{:keys [mb case cpu optical-drive optane-card thunderbolt-card]} %
                          optical-drive-name (:name optical-drive)]
                      (str (:name mb)
@@ -213,7 +222,7 @@
                           (:name optane-card)
                           (:name thunderbolt-card)
                           (if (some #{optical-drive-name} long-blu-ray-drive-names) long-blu-ray-name optical-drive-name)))
-                  (list game capture sleep media play))))
+                  (list game capture sleep media play dive))))
 
 (defn- produce-description [desc c]
   (str "\t"
@@ -244,7 +253,7 @@
                                         {:mb mb :case case :cpu % :thunderbolt-card thunderbolt-card :optane-card optane-card :optical-drive optical-drive}) cpus)
         permutations-of-three-computers (create-all-pc-permutations permutations-per-cpu)
         all-unique-valid-pc-collections (map #(first %) (partition-by names-of-all-components (sort-by names-of-all-components permutations-of-three-computers)))
-        names-of-permutations (map (fn [{:keys [game capture sleep media play total-additional-cost total-lost-cost]}]
+        names-of-permutations (map (fn [{:keys [game capture sleep media play dive total-additional-cost total-lost-cost]}]
                                      (let [additional-cost (:cost total-additional-cost)
                                            additional-components (:components total-additional-cost)
                                            lost-cost (:cost total-lost-cost)
@@ -256,7 +265,8 @@
                                                                       (produce-description "Capture" capture)
                                                                       (produce-description "Sleep" sleep)
                                                                       (produce-description "Media" media)
-                                                                      (produce-description "Play" play)))))
+                                                                      (produce-description "Play" play)
+                                                                      (produce-description "Dive" dive)))))
                                    (sort total-cost-comparator all-unique-valid-pc-collections))]
     (dorun (map #(println %) names-of-permutations))
     (println (count permutations-per-cpu))

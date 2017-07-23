@@ -3,6 +3,9 @@
 (def phanteks-enthoo-pro {:name "Phanteks Enthoo Pro" :size "ATX" :lost-cost 84.99})
 (def phanteks-enthoo-pro-name (:name phanteks-enthoo-pro))
 
+(def phanteks-enthoo-pro-2 {:name "Phanteks Enthoo Pro 2" :size "ATX" :lost-cost 84.99})
+(def phanteks-enthoo-pro-2-name (:name phanteks-enthoo-pro-2))
+
 (def silencio-case {:name "Cooler Master Silencio 352" :size "mATX" :lost-cost 57.99})
 (def silencio-case-name (:name silencio-case))
 
@@ -23,6 +26,7 @@
 
 (def cases
   (list phanteks-enthoo-pro
+        phanteks-enthoo-pro-2
         silencio-case
         phanteks-eclipse-p400s
         bequiet-purebase600

@@ -15,6 +15,9 @@
 (def core-2-quad-mb {:name "Core 2 Quad MB" :size "ATX" :socket 775 :optane? false :thunderbolt-on-board? false :only-cpu "Intel Core 2 Quad Q9500" :lost-cost 0})
 (def core-2-quad-mb-name (:name core-2-quad-mb))
 
+(def gigabyte-ga-x99p-sli-mb {:name "Gigabyte GA-X99P-SLI" :socket 2011 :optane? false :thunderbolt-on-board? true :only-cpu "E5-2609v3" :lost-cost 244.36})
+(def gigabyte-ga-x99p-sli-mb-name (:name gigabyte-ga-x99p-sli-mb))
+
 (def asus-z270-ws-mb {:name "Asus Z270 WS" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? false :only-cpu "i7-7700K" :only-thunderbolt-card "Asus Thunderbolt3" :additional-cost 379.99})
 (def asus-z270-ws-mb-name (:name asus-z270-ws-mb))
 
@@ -40,6 +43,7 @@
         gigabyte-ga-ex58-ud4p
         core-2-duo-mb
         core-2-quad-mb
+        gigabyte-ga-x99p-sli-mb
 
         asus-z270-ws-mb
         asrock-z270-supercarrier-mb
