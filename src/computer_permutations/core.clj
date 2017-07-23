@@ -34,20 +34,22 @@
     false))
 
 (defn- optical-drive-check? [mb case optical-drive]
-  (let [[mb-name case-name optical-drive-name] (map :name (list mb case optical-drive))]
-    (or (not= long-blu-ray-name optical-drive-name)
-        (and (not= asrock-z270m-extreme4-mb-name mb-name)
-             (not= asrock-z270m-extreme4-mb-2-name mb-name))
-        (not= silencio-case-name case-name))))
+  (let [[mb-name case-name optical-drive-name] (map :name (list mb case optical-drive))
+        restricted-size (and (= silencio-case-name case-name)
+                             (some #{mb-name} [asrock-z270m-extreme4-mb-name
+                                               asrock-z270m-extreme4-mb-2-name]))]
+    (cond (= short-blu-ray-name optical-drive-name) restricted-size
+          (some #{optical-drive-name} long-blu-ray-drive-names) (not restricted-size)
+          :else true)))
 
-(defn- valid-game-pc? [{{:keys [mb case cpu optical-drive]} :game}]
+(defn- valid-game-pc? [{{:keys [mb case cpu optical-drive]} :game :as c}]
   (let [[mb-name case-name cpu-name optical-drive-name] (map :name (list mb case cpu optical-drive))]
     (and (= game-cpu-name cpu-name)
          (= phanteks-enthoo-pro-name case-name)
          (some #{optical-drive-name} long-blu-ray-drive-names)
          (some #{mb-name} high-end-motherboard-names))))
 
-(defn- valid-capture-pc? [{{:keys [optical-drive cpu case mb]} :capture}]
+(defn- valid-capture-pc? [{{:keys [optical-drive cpu case mb]} :capture :as c}]
   (let [[case-name cpu-name optical-drive-name mb-name] (map :name (list case cpu optical-drive mb))]
     (and (some #{cpu-name} [low-power-kaby-lake-cpu-name high-power-kaby-lake-cpu-name])
          (not= no-optical-drive-name optical-drive-name)
@@ -118,15 +120,13 @@
   (let [lost-cost-mbs (map #(get-in % [:mb :lost-cost]) (vals m))]
     (count (filter identity lost-cost-mbs))))
 
-(defn- count-of-number-of-optane-cards-used [l]
-  (let [optane-card-names (map #(get-in % [:optane-card :name]) l)]
-    (count (filter #(= % optane-card-32GB-name) optane-card-names))))
+(defn- count-of-number-of-optane-cards-used [m]
+  (let [optane-card-names (map #(get-in % [:optane-card :name]) (vals m))]
+    (count (filter #(not= % no-optane-card-name) optane-card-names))))
 
-(defn- at-most-one-optane-card? [l]
-  (> 2 (count-of-number-of-optane-cards-used l)))
-
-(defn- use-the-one-optane-card? [l]
-  (= 1 (count-of-number-of-optane-cards-used l)))
+(defn- use-the-one-optane-card-if-allowed? [m]
+  (or (empty? (filter (fn [{:keys [mb cpu]}] (and (:optane? mb) (:optane? cpu))) (vals m)))
+      (= 1 (count-of-number-of-optane-cards-used m))))
 
 (defn- no-thunderbolt-card-in-pc? [{{:keys [name]} :thunderbolt-card}]
   (= (:name no-thunderbolt-card) name))
@@ -228,7 +228,7 @@
                     (is-capture-low-power-cpu? %)
                     (< 2 (count-of-number-of-owned-motherboard-used %))
                     (is-correct-thunderbolt-configuration? %)
-                    (at-most-one-optane-card? %)))
+                    (use-the-one-optane-card-if-allowed? %)))
       (map #(assoc % :total-additional-cost (calculate-additional-cost %) :total-lost-cost (calculate-lost-cost %))))))
 
 (defn- total-cost-comparator [el1 el2]
