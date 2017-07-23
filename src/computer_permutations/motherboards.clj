@@ -57,3 +57,5 @@
         gigabyte-ga-z270-ud5
         ))
 
+(def high-end-motherboards (list asus-z170-ws-mb asus-z270-ws-mb asrock-z270-supercarrier-mb))
+(def high-end-motherboard-names (map #(:name %) high-end-motherboards))

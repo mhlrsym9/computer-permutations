@@ -13,7 +13,7 @@
 (def low-power-skylake-cpu {:name "i5-6500t" :socket 1151 :optane? false :lost-cost (+ 107.50 6.65)})
 (def low-power-skylake-cpu-name (:name low-power-skylake-cpu))
 
-(def intel-e5-2609-v3-cpu {:name "E5-2609v3" :socket 2011 :licensed-to gigabyte-ga-x99p-sli-mb :optane? false :lost-cost 183.60})
+(def intel-e5-2609-v3-cpu {:name "E5-2609v3" :socket 2011 :licensed-to gigabyte-ga-x99p-sli-mb-name :optane? false :lost-cost 183.60})
 (def intel-e5-2609-v3-cpu-name (:name intel-e5-2609-v3-cpu))
 
 (def i7-920-cpu {:name "i7-920" :socket 1366 :licensed-to gigabyte-ga-ex58-ud4p-name :optane? false :lost-cost 0})

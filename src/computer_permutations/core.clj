@@ -45,26 +45,29 @@
     (and (= game-cpu-name cpu-name)
          (= phanteks-enthoo-pro-name case-name)
          (some #{optical-drive-name} long-blu-ray-drive-names)
-         (some #{mb-name} [asrock-z270-supercarrier-mb-name]))))
+         (some #{mb-name} high-end-motherboard-names))))
 
-(defn- valid-capture-pc? [{{:keys [optical-drive cpu case]} :capture}]
-  (let [[case-name cpu-name optical-drive-name] (map :name (list case cpu optical-drive))]
+(defn- valid-capture-pc? [{{:keys [optical-drive cpu case mb]} :capture}]
+  (let [[case-name cpu-name optical-drive-name mb-name] (map :name (list case cpu optical-drive mb))]
     (and (some #{cpu-name} [low-power-kaby-lake-cpu-name high-power-kaby-lake-cpu-name])
          (not= no-optical-drive-name optical-drive-name)
+         (not-any? #{mb-name} high-end-motherboard-names)
          (some #{case-name} [silencio-case-name bequiet-purebase600-name]))))
 
-(defn- valid-sleep-pc? [{{:keys [case optane-card optical-drive cpu]} :sleep}]
-  (let [[case-name optane-card-name optical-drive-name cpu-name] (map :name (list case optane-card optical-drive cpu))]
+(defn- valid-sleep-pc? [{{:keys [case optane-card optical-drive cpu mb]} :sleep}]
+  (let [[case-name optane-card-name optical-drive-name cpu-name mb-name] (map :name (list case optane-card optical-drive cpu mb))]
     (and (= phanteks-eclipse-p400s-name case-name)
          (= no-optane-card-name optane-card-name)
          (= no-optical-drive-name optical-drive-name)
+         (not-any? #{mb-name} high-end-motherboard-names)
          (some #{cpu-name} [core-2-duo-cpu-name low-power-skylake-cpu-name]))))
 
-(defn- valid-media-pc? [{{:keys [case optane-card optical-drive cpu]} :media}]
-  (let [[case-name optane-card-name optical-drive-name cpu-name] (map :name (list case optane-card optical-drive cpu))]
+(defn- valid-media-pc? [{{:keys [case optane-card optical-drive cpu mb]} :media}]
+  (let [[case-name optane-card-name optical-drive-name cpu-name mb-name] (map :name (list case optane-card optical-drive cpu mb))]
     (and (= fractal-design-define-c-name case-name)
          (= no-optane-card-name optane-card-name)
          (= no-optical-drive-name optical-drive-name)
+         (not-any? #{mb-name} high-end-motherboard-names)
          (some #{cpu-name} [i7-920-cpu-name low-power-kaby-lake-cpu-name high-power-kaby-lake-cpu-name]))))
 
 (defn- valid-play-pc? [{{:keys [mb case cpu optical-drive]} :play}]
@@ -76,7 +79,7 @@
 (defn- valid-dive-pc? [{{:keys [mb case cpu optical-drive]} :dive}]
   (let [[mb-name case-name cpu-name optical-drive-name] (map :name (list mb case cpu optical-drive))]
     (and (some #{cpu-name} [intel-e5-2609-v3-cpu-name high-power-skylake-cpu-name])
-         (some #{mb-name} [gigabyte-ga-x99p-sli-mb-name asus-z170-ws-mb-name])
+         (some #{mb-name} (cons gigabyte-ga-x99p-sli-mb-name high-end-motherboard-names))
          (= phanteks-enthoo-pro-2-name case-name)
          (= no-optical-drive-name optical-drive-name))))
 
@@ -94,6 +97,22 @@
 
 (defn- all-different-optical-drives? [m]
   (all-different-names? (remove (fn [n] (= no-optical-drive-name n)) (map #(get-in % [:optical-drive :name]) (vals m)))))
+
+(defn- count-number-of-thunderbolt-cards [m name]
+  (count (filter (fn [c] (= name (get-in c [:thunderbolt-card :name]))) (vals m))))
+
+(defn- is-only-one-asrock-thunderbolt-card? [m]
+  (> 2 (count-number-of-thunderbolt-cards m asrock-thunderbolt3-card-name)))
+
+(defn- is-only-one-asus-thunderbolt-card? [m]
+  (> 2 (count-number-of-thunderbolt-cards m asus-thunderbolt-card-name)))
+
+; The capture pc needs to have the possibility of having high-power LGA1151 CPUs
+; in order to pass the thunderbolt configuration, but I don't actually want
+; those CPUs in the capture PC, unless I absolutely need to flip one of the
+; other two boards (media & sleep) if I need a processing boost...
+(defn- is-capture-low-power-cpu? [{{{:keys [name]} :cpu} :capture}]
+  (some #{name} (list low-power-kaby-lake-cpu-name low-power-skylake-cpu-name)))
 
 (defn- count-of-number-of-owned-motherboard-used [m]
   (let [lost-cost-mbs (map #(get-in % [:mb :lost-cost]) (vals m))]
@@ -204,6 +223,9 @@
                     (all-different-cases? %)
                     (all-different-cpus? %)
                     (all-different-optical-drives? %)
+                    (is-only-one-asrock-thunderbolt-card? %)
+                    (is-only-one-asus-thunderbolt-card? %)
+                    (is-capture-low-power-cpu? %)
                     (< 2 (count-of-number-of-owned-motherboard-used %))
                     (is-correct-thunderbolt-configuration? %)
                     (at-most-one-optane-card? %)))
