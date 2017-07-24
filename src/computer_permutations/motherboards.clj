@@ -24,16 +24,17 @@
 (def asrock-z270-supercarrier-mb {:name "ASRock Z270 Supercarrier" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? true :only-cpu "i7-7700K" :additional-cost 349.99})
 (def asrock-z270-supercarrier-mb-name (:name asrock-z270-supercarrier-mb))
 
+(def asrock-z270-extreme4 {:name "ASRock Z270 Extreme4" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? false :only-thunderbolt-card "ASRock Thunderbolt3" :additional-cost 134.99})
+
+(def asrock-z270-itx {:name "ASRock Z270 ITX/AC" :size "mITX" :socket 1151 :optane? true :thunderbolt-on-board? true :additional-cost 138.99})
+
 (def asrock-b250m-pro4 {:name "ASRock B250M Pro4" :size "mATX" :socket 1151 :optane? true :thunderbolt-on-board? false :additional-cost (* 69.99 1.0625) :from "MicroCenter"})
 
 (def asrock-h270-pro4 {:name "ASRock H270 Pro4" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? false :only-thunderbolt-card "ASRock Thunderbolt3" :additional-cost 89.99})
 
+(def asrock-z170-extreme4plus {:name "ASRock Z170 Extreme4+" :size "ATX" :socket 1151 :optane? false :thunderbolt-on-board? false :additional-cost 139.99})
+
 (def asrock-b150m-pro4 {:name "ASRock B150M Pro4" :size "mATX" :socket 1151 :optane? false :thunderbolt-on-board? false :additional-cost (- 78.99 15)})
-
-(def asrock-z270-itx {:name "ASRock Z270 ITX/AC" :size "mITX" :socket 1151 :optane? true :thunderbolt-on-board? true :additional-cost 138.99})
-
-(def asrock-z270m-extreme4-mb-2 {:name "ASRock Z270M Extreme4 2" :size "mATX" :socket 1151 :optane? true :thunderbolt-on-board? false :only-thunderbolt-card "ASRock Thunderbolt3" :additional-cost 197.95})
-(def asrock-z270m-extreme4-mb-2-name (:name asrock-z270m-extreme4-mb-2))
 
 (def gigabyte-ga-z270-ud5 {:name "Gigabyte GA-Z270-UD5" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? true :additional-cost (* 199.99 1.0625)})
 
@@ -45,6 +46,9 @@
         core-2-quad-mb
         gigabyte-ga-x99p-sli-mb
 
+        asrock-z270-extreme4
+        asrock-z170-extreme4plus
+
         asus-z270-ws-mb
         asrock-z270-supercarrier-mb
 
@@ -53,7 +57,6 @@
         asrock-b150m-pro4
 
         asrock-z270-itx
-        asrock-z270m-extreme4-mb-2
         gigabyte-ga-z270-ud5
         ))
 

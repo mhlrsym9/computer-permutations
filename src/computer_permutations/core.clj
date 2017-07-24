@@ -36,8 +36,7 @@
 (defn- optical-drive-check? [mb case optical-drive]
   (let [[mb-name case-name optical-drive-name] (map :name (list mb case optical-drive))
         restricted-size (and (= silencio-case-name case-name)
-                             (some #{mb-name} [asrock-z270m-extreme4-mb-name
-                                               asrock-z270m-extreme4-mb-2-name]))]
+                             (= asrock-z270m-extreme4-mb-name mb-name))]
     (cond (= short-blu-ray-name optical-drive-name) restricted-size
           (some #{optical-drive-name} long-blu-ray-drive-names) (not restricted-size)
           :else true)))
@@ -147,11 +146,11 @@
 (defn- is-correct-thunderbolt-configuration? [{:keys [game capture sleep media play dive]}]
   (and (is-thunderbolt-pc? game)
        (is-thunderbolt-pc? dive)
-       ;       (no-thunderbolt-card-in-pc? capture)
+       (is-thunderbolt-pc? capture)
        (no-thunderbolt-card-in-pc? sleep)
        (no-thunderbolt-card-in-pc? media)
        (not (is-thunderbolt-pc? play))
-       ;       (or (does-flipped-pcs-still-work? capture sleep) (does-flipped-pcs-still-work? capture media))
+       (or (does-flipped-pcs-still-work? capture sleep) (does-flipped-pcs-still-work? capture media))
        ))
 
 (defn- already-licensed? [c]
