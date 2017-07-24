@@ -103,12 +103,6 @@
 (defn- count-number-of-thunderbolt-cards [m name]
   (count (filter (fn [c] (= name (get-in c [:thunderbolt-card :name]))) (vals m))))
 
-(defn- is-only-one-asrock-thunderbolt-card? [m]
-  (> 2 (count-number-of-thunderbolt-cards m asrock-thunderbolt3-card-name)))
-
-(defn- is-only-one-asus-thunderbolt-card? [m]
-  (> 2 (count-number-of-thunderbolt-cards m asus-thunderbolt-card-name)))
-
 ; The capture pc needs to have the possibility of having high-power LGA1151 CPUs
 ; in order to pass the thunderbolt configuration, but I don't actually want
 ; those CPUs in the capture PC, unless I absolutely need to flip one of the
@@ -152,13 +146,13 @@
 
 (defn- is-correct-thunderbolt-configuration? [{:keys [game capture sleep media play dive]}]
   (and (is-thunderbolt-pc? game)
-       (is-thunderbolt-pc? capture)
        (is-thunderbolt-pc? dive)
+       ;       (no-thunderbolt-card-in-pc? capture)
        (no-thunderbolt-card-in-pc? sleep)
        (no-thunderbolt-card-in-pc? media)
        (not (is-thunderbolt-pc? play))
-       (or (does-flipped-pcs-still-work? capture sleep)
-           (does-flipped-pcs-still-work? capture media))))
+       ;       (or (does-flipped-pcs-still-work? capture sleep) (does-flipped-pcs-still-work? capture media))
+       ))
 
 (defn- already-licensed? [c]
   (if-let [licensed-to (get-in c [:cpu :licensed-to])]
@@ -223,8 +217,8 @@
                     (all-different-cases? %)
                     (all-different-cpus? %)
                     (all-different-optical-drives? %)
-                    (is-only-one-asrock-thunderbolt-card? %)
-                    (is-only-one-asus-thunderbolt-card? %)
+                    (> 2 (count-number-of-thunderbolt-cards % asrock-thunderbolt3-card-name))
+                    (> 2 (count-number-of-thunderbolt-cards % asus-thunderbolt-card-name))
                     (is-capture-low-power-cpu? %)
                     (< 2 (count-of-number-of-owned-motherboard-used %))
                     (is-correct-thunderbolt-configuration? %)
