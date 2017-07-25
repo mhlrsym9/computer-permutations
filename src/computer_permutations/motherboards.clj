@@ -24,6 +24,8 @@
 (def asrock-z270-supercarrier-mb {:name "ASRock Z270 Supercarrier" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? true :only-cpu "i7-7700K" :additional-cost 349.99})
 (def asrock-z270-supercarrier-mb-name (:name asrock-z270-supercarrier-mb))
 
+(def gigabyte-ga-z170x-gaming-7 {:name "Gigabyte GA-Z170X-Gaming 7" :size "ATX" :socket 1151 :optane? false :thunderbolt-on-board? true :additional-cost 77.64})
+
 (def asrock-z270-extreme4 {:name "ASRock Z270 Extreme4" :size "ATX" :socket 1151 :optane? true :thunderbolt-on-board? false :only-thunderbolt-card "ASRock Thunderbolt3" :additional-cost 134.99})
 
 (def asrock-z270-itx {:name "ASRock Z270 ITX/AC" :size "mITX" :socket 1151 :optane? true :thunderbolt-on-board? true :additional-cost 138.99})
@@ -46,18 +48,19 @@
         core-2-quad-mb
         gigabyte-ga-x99p-sli-mb
 
-        asrock-z270-extreme4
-        asrock-z170-extreme4plus
+        ;        asrock-z270-extreme4
+        ;        asrock-z170-extreme4plus
 
         asus-z270-ws-mb
         asrock-z270-supercarrier-mb
 
+        gigabyte-ga-z170x-gaming-7
         asrock-b250m-pro4
         asrock-h270-pro4
         asrock-b150m-pro4
 
-        asrock-z270-itx
-        gigabyte-ga-z270-ud5
+        ;        asrock-z270-itx
+        ;        gigabyte-ga-z270-ud5
         ))
 
 (def high-end-motherboards (list asus-z170-ws-mb asus-z270-ws-mb asrock-z270-supercarrier-mb))
